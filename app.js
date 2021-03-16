@@ -33,7 +33,12 @@ const trash = new Item ({
 
 const defaultItems = [clean, cook, trash];
 
+const listSchema = {
+  name: String,
+  items: [itemsSchema]
+}
 
+const List = mongoose.model("List", listSchema)
 
 app.get("/", function(req, res) {
 
@@ -81,8 +86,25 @@ app.post("/delete", (req, res) => {
   });
 })
 
-app.get("/work", function(req,res){
-  res.render("list", {listTitle: "Work List", newListItems: workItems});
+app.get("/:customListName", (req, res) => {
+  const customListName = req.params.customListName;
+  List.findOne({name: customListName}, (err, foundList) => {
+    if (!err){
+      if (!foundList){
+        const list = new List({
+    name: customListName,
+    items: defaultItems
+  });
+
+  list.save();
+  res.redirect("/" + customListName);
+      } else {
+        res.render("list", {listTitle: foundList.name, newListItems: foundList.items})
+      }
+    }
+  });
+  
+
 });
 
 app.get("/about", function(req, res){
